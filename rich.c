@@ -31,14 +31,24 @@ char *color_get_ansi_code(Color color, bool foreground) {
     return ansi_code;
 }
 
-void rich_print(Text text) {
-    char *color_ansi_code = color_get_ansi_code(text.style.color, true);
-    char *bgcolor_ansi_code = color_get_ansi_code(text.style.bgcolor, false);
-    printf(
-        "\x1b[%s;%sm%s\x1b[0m", color_ansi_code, bgcolor_ansi_code, text.text
-    );
+char *style_make_ansi_codes(Style style) {
+    char *ansi_codes = NULL;
+
+    char *bgcolor_ansi_code = color_get_ansi_code(style.bgcolor, false);
+    char *color_ansi_code = color_get_ansi_code(style.color, true);
+
+    asprintf(&ansi_codes, "%s;%s", bgcolor_ansi_code, color_ansi_code);
+
     free(color_ansi_code);
     free(bgcolor_ansi_code);
+
+    return ansi_codes;
+}
+
+void rich_print(Text text) {
+    char *ansi_codes = style_make_ansi_codes(text.style);
+    printf("\x1b[%sm%s\x1b[0m", ansi_codes, text.text);
+    free(ansi_codes);
 }
 
 int main() {

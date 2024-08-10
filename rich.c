@@ -2,10 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef enum {
+    DEFAULT,
+    TRUECOLOR,
+} ColorType;
+
 typedef struct {
     int red;
     int green;
     int blue;
+} ColorTriplet;
+
+typedef struct {
+    ColorType type;
+    ColorTriplet triplet;
 } Color;
 
 typedef struct {
@@ -18,16 +28,29 @@ typedef struct {
     Style style;
 } Text;
 
+Color color_from_rgb(int red, int green, int blue) {
+    Color color = {.type = TRUECOLOR, .triplet = {red, green, blue}};
+    return color;
+}
+
 char *color_get_ansi_code(Color color, bool foreground) {
     char *ansi_code = NULL;
-    asprintf(
-        &ansi_code,
-        "%d;2;%d;%d;%d",
-        foreground ? 38 : 48,
-        color.red,
-        color.green,
-        color.blue
-    );
+    switch (color.type) {
+        case DEFAULT:
+            asprintf(&ansi_code, "%d", foreground ? 39 : 49);
+            break;
+        case TRUECOLOR:
+            asprintf(
+                &ansi_code,
+                "%d;2;%d;%d;%d",
+                foreground ? 38 : 48,
+                color.triplet.red,
+                color.triplet.green,
+                color.triplet.blue
+            );
+            break;
+    }
+
     return ansi_code;
 }
 
@@ -52,7 +75,10 @@ void rich_print(Text text) {
 }
 
 int main() {
-    Style style = {.color = {255, 0, 0}, .bgcolor = {255, 255, 0}};
+    Style style = {
+        .color = color_from_rgb(255, 0, 0),
+        // .bgcolor = color_from_rgb(255, 255, 0)
+    };
     Text text = {"Hello, World!\n", style};
 
     rich_print(text);

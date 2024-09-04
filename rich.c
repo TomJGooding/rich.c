@@ -23,6 +23,9 @@ typedef struct {
 typedef struct {
     Color color;
     Color bgcolor;
+    bool bold;
+    bool italic;
+    bool underline;
 } Style;
 
 typedef struct {
@@ -99,11 +102,28 @@ char *color_get_ansi_code(Color color, bool foreground) {
 char *style_make_ansi_codes(Style style) {
     char *ansi_codes = NULL;
 
+    char *attrs_ansi_codes = NULL;
+    asprintf(
+        &attrs_ansi_codes,
+        "%s%s%s",
+        style.bold ? "1;" : "",
+        style.italic ? "3;" : "",
+        style.underline ? "4;" : ""
+
+    );
+
     char *bgcolor_ansi_code = color_get_ansi_code(style.bgcolor, false);
     char *color_ansi_code = color_get_ansi_code(style.color, true);
 
-    asprintf(&ansi_codes, "%s;%s", bgcolor_ansi_code, color_ansi_code);
+    asprintf(
+        &ansi_codes,
+        "%s%s;%s",
+        attrs_ansi_codes,
+        bgcolor_ansi_code,
+        color_ansi_code
+    );
 
+    free(attrs_ansi_codes);
     free(color_ansi_code);
     free(bgcolor_ansi_code);
 
@@ -119,7 +139,10 @@ void rich_print(Text text) {
 int main() {
     Style style = {
         .color = color_from_rgb(255, 0, 0),
-        .bgcolor = color_from_rgb_hex("ffff00")
+        .bgcolor = color_from_rgb_hex("ffff00"),
+        .bold = true,
+        .italic = true,
+        .underline = true
     };
     Text text = {"Hello, World!\n", style};
 
